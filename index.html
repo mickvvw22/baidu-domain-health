@@ -28,7 +28,7 @@ function field(id,value,detail,status){const node=document.getElementById(id);no
 async function load(){
   document.getElementById('headline').textContent='正在读取最近一次检查';
   try{
-    const r=await fetch('https://dudu.loc.cc/latest.json?t='+Date.now(),{cache:'no-store'});
+    const r=await fetch('https://raw.githubusercontent.com/mickvvw22/dudu-domain-health/refs/heads/public-monitor-data/latest.json?t='+Date.now(),{cache:'no-store'});
     if(!r.ok) throw new Error('数据源不可用');
     const data=await r.json(); const site=(data.sites||[]).find(s=>s.host==='baidu.vvpp.cc');
     if(!site) throw new Error('数据中没有此域名');
