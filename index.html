@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>baidu.vvpp.cc · 域名状态</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--card:#141d31;--line:#2a3850;--muted:#a9b7cc;--ink:#f2f7ff;--cyan:#6ee7e1;--good:#5de0a2;--bad:#ff8b8b;--warn:#ffd084}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0%,#18355a 0,transparent 35%),var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:48px 24px 64px}header{display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{font-size:.85rem;letter-spacing:.18em;color:var(--cyan);font-weight:700}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--muted);font-size:.8rem}h1{font-size:clamp(2.2rem,6vw,4rem);line-height:1.1;letter-spacing:-.04em;margin:50px 0 12px;overflow-wrap:anywhere}p{color:var(--muted)}.lead{font-size:1.05rem;max-width:620px}.summary{margin:32px 0 22px;background:linear-gradient(120deg,#182c42,#142033);border:1px solid #2f4b60;border-radius:18px;padding:24px;display:flex;gap:18px;align-items:center}.dot{width:12px;height:12px;border-radius:50%;background:var(--warn);box-shadow:0 0 20px currentColor;flex:none}.summary strong{font-size:1.13rem}.summary p{margin:3px 0 0;font-size:.9rem}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;min-height:142px}.card h2{font-size:.78rem;letter-spacing:.1em;color:var(--muted);margin:0 0 18px}.value{font-size:1.12rem;font-weight:700}.details{font-size:.8rem;color:var(--muted);margin-top:6px;overflow-wrap:anywhere}.ok{color:var(--good)}.fail{color:var(--bad)}.unknown{color:var(--warn)}.note{margin-top:20px;padding:20px 22px;border:1px solid var(--line);border-radius:14px;color:var(--muted);font-size:.9rem}.note p{margin:0 0 8px}.note p:last-child{margin-bottom:0}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}a,button{font:inherit}a{color:var(--cyan)}button,.button{background:#8cebe1;color:#092120;text-decoration:none;border:0;border-radius:9px;padding:10px 16px;font-weight:700;cursor:pointer}.button.secondary{background:#1a293f;color:#d7e7f7;border:1px solid var(--line)}footer{margin-top:54px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:.8rem}@media(max-width:700px){main{padding:30px 18px 48px}.grid{grid-template-columns:repeat(2,1fr)}h1{margin-top:42px}.card{min-height:125px}}
+</style>
+</head>
+<body><main>
+<header><div class="brand">DOMAIN HEALTH / 状态中心</div><div class="tag">PUBLIC STATUS</div></header>
+<h1>baidu.vvpp.cc</h1><p class="lead">一个简单、透明的域名健康状态页。这里展示现有监控最近一次检查的结果，而非实时探测。</p>
+<section class="summary" aria-live="polite"><span class="dot" id="dot"></span><div><strong id="headline">正在读取最近一次检查</strong><p id="time">数据来自现有的六小时监控。</p></div></section>
+<section class="grid" aria-label="健康检查项目">
+<div class="card"><h2>DNS / 解析</h2><div class="value unknown" id="dns">未知</div><div class="details" id="dns-detail">等待数据</div></div>
+<div class="card"><h2>TLS / 证书</h2><div class="value unknown" id="tls">未知</div><div class="details" id="tls-detail">等待数据</div></div>
+<div class="card"><h2>HTTP</h2><div class="value unknown" id="http">未知</div><div class="details" id="http-detail">等待数据</div></div>
+<div class="card"><h2>HTTPS</h2><div class="value unknown" id="https">未知</div><div class="details" id="https-detail">等待数据</div></div>
+</section>
+<div class="note"><p id="notice">定时检查通常每六小时运行一次，GitHub 调度可能延迟。刷新只重新读取已有数据，不会启动新检测。</p><p>这些检查不验证邮件实际收发，也不能保证域名保活或自动修复故障。</p></div>
+<div class="actions"><button id="refresh" type="button">刷新数据</button><a class="button secondary" href="http://dudu.loc.cc/">查看原监控（HTTP）</a><a class="button secondary" href="https://github.com/mickvvw22/dudu-domain-health/actions">查看检查记录</a></div>
+<footer>数据来源：现有 GitHub Actions 健康检查 · 独立页面不创建重复定时任务</footer>
+</main>
+<script>
+const ids=['dns','tls','http','https'];
+function field(id,value,detail,status){const node=document.getElementById(id);node.textContent=value;node.className='value '+status;document.getElementById(id+'-detail').textContent=detail;}
+async function load(){
+  document.getElementById('headline').textContent='正在读取最近一次检查';
+  try{
+    const r=await fetch('https://dudu.loc.cc/latest.json?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error('数据源不可用');
+    const data=await r.json(); const site=(data.sites||[]).find(s=>s.host==='baidu.vvpp.cc');
+    if(!site) throw new Error('数据中没有此域名');
+    const checked=new Date(data.checked_at); const valid=Number.isFinite(checked.getTime());
+    const stale=!valid || Date.now()-checked.getTime()>9*60*60*1000;
+    document.getElementById('time').textContent=valid?'最近检查：'+checked.toLocaleString()+'（以设备时区显示）':'检查时间未知';
+    let failed=0;
+    ids.forEach(id=>{const x=site[id]||{};const s=x.status==='ok'?'ok':x.status==='fail'?'fail':'unknown';if(s==='fail')failed++;let d=x.error||'';if(id==='dns'&&s==='ok')d=[...(x.A||[]),...(x.AAAA||[])].join('、')||'解析成功';if(id==='tls'&&s==='ok')d=x.expires_at?'到期：'+x.expires_at:'证书验证通过';if((id==='http'||id==='https')&&s==='ok')d='HTTP '+(x.status_code||'可达');field(id,s==='ok'?'正常':s==='fail'?'异常':'未知',d||'无详细信息',s);});
+    document.getElementById('headline').textContent=stale?'数据可能已过期':failed?'部分检查异常':'已读取最近检查';
+    document.getElementById('dot').style.background=stale?'#ffd084':failed?'#ff8b8b':'#5de0a2';
+    document.getElementById('notice').textContent=stale?'数据超过九小时或时间无效，状态可能不是最新；请查看检查记录。':'定时检查通常每六小时运行一次，GitHub 调度可能延迟。刷新只重新读取已有数据，不会启动新检测。';
+  }catch(e){ids.forEach(id=>field(id,'未知','无法读取监控数据','unknown'));document.getElementById('headline').textContent='暂时无法读取监控数据';document.getElementById('time').textContent='请稍后重试或查看原监控。';document.getElementById('dot').style.background='#ffd084';document.getElementById('notice').textContent='数据源 HTTPS 暂不可用或网络受限时，本页不会猜测状态。原监控的 HTTP 链接不加密，请勿输入敏感信息。';}
+}
+document.getElementById('refresh').addEventListener('click',load);load();
+</script></body></html>
